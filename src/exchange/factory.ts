@@ -17,8 +17,6 @@ export function handlePairCreated(event: PairCreated): void {
   if (factory === null) {
     factory = new PancakeFactory(FACTORY_ADDRESS);
     factory.totalPairs = ZERO_BI;
-    factory.totalLiquidityBNB = ZERO_BD;
-    factory.totalLiquidityUSD = ZERO_BD;
 
     let bundle = new Bundle("1");
     bundle.bnbPrice = ZERO_BD;
@@ -65,7 +63,6 @@ export function handlePairCreated(event: PairCreated): void {
   pair.name = token0.symbol.concat("-").concat(token1.symbol);
   pair.reserve0 = ZERO_BD;
   pair.reserve1 = ZERO_BD;
-  pair.trackedReserveBNB = ZERO_BD;
   pair.reserveBNB = ZERO_BD;
   pair.reserveUSD = ZERO_BD;
   pair.totalSupply = ZERO_BD;

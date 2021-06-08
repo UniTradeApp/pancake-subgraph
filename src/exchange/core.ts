@@ -1,9 +1,9 @@
 /* eslint-disable prefer-const */
 import { BigInt, BigDecimal } from "@graphprotocol/graph-ts";
 import { Pair, Token, PancakeFactory, Bundle } from "../../generated/schema";
-import { Mint, Burn, Swap, Transfer, Sync } from "../../generated/templates/Pair/Pair";
+import { Mint, Burn, Transfer, Sync } from "../../generated/templates/Pair/Pair";
 import { updateTokenDayData } from "./dayUpdates";
-import { getBnbPriceInUSD, findBnbPerToken, getTrackedVolumeUSD, getTrackedLiquidityUSD } from "./pricing";
+import { getBnbPriceInUSD, findBnbPerToken } from "./pricing";
 import { convertTokenToDecimal, ADDRESS_ZERO, FACTORY_ADDRESS, ZERO_BD, BI_18 } from "./utils";
 
 export function handleTransfer(event: Transfer): void {
@@ -39,9 +39,6 @@ export function handleSync(event: Sync): void {
   let token1 = Token.load(pair.token1);
   let pancake = PancakeFactory.load(FACTORY_ADDRESS);
 
-  // reset factory liquidity by subtracting only tracked liquidity
-  pancake.totalLiquidityBNB = pancake.totalLiquidityBNB.minus(pair.trackedReserveBNB as BigDecimal);
-
   // reset token total liquidity amounts
   token0.totalLiquidity = token0.totalLiquidity.minus(pair.reserve0);
   token1.totalLiquidity = token1.totalLiquidity.minus(pair.reserve1);
@@ -68,30 +65,11 @@ export function handleSync(event: Sync): void {
   token1.derivedUSD = t1DerivedBNB.times(bundle.bnbPrice);
   token1.save();
 
-  // get tracked liquidity - will be 0 if neither is in whitelist
-  let trackedLiquidityBNB: BigDecimal;
-  if (bundle.bnbPrice.notEqual(ZERO_BD)) {
-    trackedLiquidityBNB = getTrackedLiquidityUSD(
-      bundle as Bundle,
-      pair.reserve0,
-      token0 as Token,
-      pair.reserve1,
-      token1 as Token
-    ).div(bundle.bnbPrice);
-  } else {
-    trackedLiquidityBNB = ZERO_BD;
-  }
-
   // use derived amounts within pair
-  pair.trackedReserveBNB = trackedLiquidityBNB;
   pair.reserveBNB = pair.reserve0
     .times(token0.derivedBNB as BigDecimal)
     .plus(pair.reserve1.times(token1.derivedBNB as BigDecimal));
   pair.reserveUSD = pair.reserveBNB.times(bundle.bnbPrice);
-
-  // use tracked amounts globally
-  pancake.totalLiquidityBNB = pancake.totalLiquidityBNB.plus(trackedLiquidityBNB);
-  pancake.totalLiquidityUSD = pancake.totalLiquidityBNB.times(bundle.bnbPrice);
 
   // now correctly set liquidity amounts for each token
   token0.totalLiquidity = token0.totalLiquidity.plus(pair.reserve0);
@@ -137,49 +115,4 @@ export function handleBurn(event: Burn): void {
 
   updateTokenDayData(token0 as Token, event);
   updateTokenDayData(token1 as Token, event);
-}
-
-export function handleSwap(event: Swap): void {
-  let pair = Pair.load(event.address.toHex());
-  let token0 = Token.load(pair.token0);
-  let token1 = Token.load(pair.token1);
-  let amount0In = convertTokenToDecimal(event.params.amount0In, token0.decimals);
-  let amount1In = convertTokenToDecimal(event.params.amount1In, token1.decimals);
-  let amount0Out = convertTokenToDecimal(event.params.amount0Out, token0.decimals);
-  let amount1Out = convertTokenToDecimal(event.params.amount1Out, token1.decimals);
-
-  // totals for volume updates
-  let amount0Total = amount0Out.plus(amount0In);
-  let amount1Total = amount1Out.plus(amount1In);
-
-  // BNB/USD prices
-  let bundle = Bundle.load("1");
-
-  // only accounts for volume through white listed tokens
-  let trackedAmountUSD = getTrackedVolumeUSD(
-    bundle as Bundle,
-    amount0Total,
-    token0 as Token,
-    amount1Total,
-    token1 as Token
-  );
-
-  let trackedAmountBNB: BigDecimal;
-  if (bundle.bnbPrice.equals(ZERO_BD)) {
-    trackedAmountBNB = ZERO_BD;
-  } else {
-    trackedAmountBNB = trackedAmountUSD.div(bundle.bnbPrice);
-  }
-
-  // update pair volume data, use tracked amount if we have it as its probably more accurate
-  pair.save();
-
-  // update global values, only used tracked amounts for volume
-  let pancake = PancakeFactory.load(FACTORY_ADDRESS);
-
-  // save entities
-  pair.save();
-  token0.save();
-  token1.save();
-  pancake.save();
 }

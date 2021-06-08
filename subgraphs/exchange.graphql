@@ -3,10 +3,6 @@ type PancakeFactory @entity {
 
   "Total of pairs"
   totalPairs: BigInt!
-
-  # total liquidity
-  totalLiquidityUSD: BigDecimal!
-  totalLiquidityBNB: BigDecimal!
 }
 
 type Bundle @entity {
@@ -35,8 +31,6 @@ type Token @entity {
 
   # derived fields
   hourlyCandlesticks: [HourlyCandlestick!]! @derivedFrom(field: "token")
-  pairBase: [Pair!]! @derivedFrom(field: "token0")
-  pairQuote: [Pair!]! @derivedFrom(field: "token1")
 }
 
 type Pair @entity {
@@ -54,7 +48,7 @@ type Pair @entity {
   # derived liquidity
   reserveBNB: BigDecimal!
   reserveUSD: BigDecimal!
-  trackedReserveBNB: BigDecimal! # used for separating per pair reserves and global
+
   # Price in terms of the asset pair
   token0Price: BigDecimal!
   token1Price: BigDecimal!

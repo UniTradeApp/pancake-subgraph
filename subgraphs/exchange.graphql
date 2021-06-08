@@ -61,29 +61,6 @@ type Pair @entity {
 
   block: BigInt!
   timestamp: BigInt!
-
-  # derived fields
-  swaps: [Swap!]! @derivedFrom(field: "pair")
-}
-
-type Swap @entity {
-  # transaction hash + "-" + index in swaps Transaction array
-  id: ID!
-  timestamp: BigInt! # need this to pull recent txns for specific token or pair
-  pair: Pair!
-
-  # populated from the Swap event
-  sender: Bytes!
-  from: Bytes! # the EOA that initiated the txn
-  amount0In: BigDecimal!
-  amount1In: BigDecimal!
-  amount0Out: BigDecimal!
-  amount1Out: BigDecimal!
-  to: Bytes!
-  logIndex: BigInt
-
-  # derived info
-  amountUSD: BigDecimal!
 }
 
 type HourlyCandlestick @entity {

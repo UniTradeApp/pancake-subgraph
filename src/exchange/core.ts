@@ -1,6 +1,6 @@
 /* eslint-disable prefer-const */
 import { BigInt, BigDecimal } from "@graphprotocol/graph-ts";
-import { Pair, Token, PancakeFactory, Swap as SwapEvent, Bundle } from "../../generated/schema";
+import { Pair, Token, PancakeFactory, Bundle } from "../../generated/schema";
 import { Mint, Burn, Swap, Transfer, Sync } from "../../generated/templates/Pair/Pair";
 import { updateTokenDayData } from "./dayUpdates";
 import { getBnbPriceInUSD, findBnbPerToken, getTrackedVolumeUSD, getTrackedLiquidityUSD } from "./pricing";
@@ -155,13 +155,6 @@ export function handleSwap(event: Swap): void {
   // BNB/USD prices
   let bundle = Bundle.load("1");
 
-  // get total amounts of derived USD and BNB for tracking
-  let derivedAmountBNB = token1.derivedBNB
-    .times(amount1Total)
-    .plus(token0.derivedBNB.times(amount0Total))
-    .div(BigDecimal.fromString("2"));
-  let derivedAmountUSD = derivedAmountBNB.times(bundle.bnbPrice);
-
   // only accounts for volume through white listed tokens
   let trackedAmountUSD = getTrackedVolumeUSD(
     bundle as Bundle,
@@ -189,21 +182,4 @@ export function handleSwap(event: Swap): void {
   token0.save();
   token1.save();
   pancake.save();
-
-  let swap = new SwapEvent(event.transaction.hash.toHex().concat("-").concat(BigInt.fromI32(0).toString()));
-
-  // update swap event
-  swap.pair = pair.id;
-  swap.timestamp = event.block.timestamp;
-  swap.sender = event.params.sender;
-  swap.amount0In = amount0In;
-  swap.amount1In = amount1In;
-  swap.amount0Out = amount0Out;
-  swap.amount1Out = amount1Out;
-  swap.to = event.params.to;
-  swap.from = event.transaction.from;
-  swap.logIndex = event.logIndex;
-  // use the tracked amount if we have it
-  swap.amountUSD = trackedAmountUSD === ZERO_BD ? derivedAmountUSD : trackedAmountUSD;
-  swap.save();
 }

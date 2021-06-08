@@ -18,9 +18,7 @@ export function handlePairCreated(event: PairCreated): void {
     factory = new PancakeFactory(FACTORY_ADDRESS);
     factory.totalPairs = ZERO_BI;
     factory.totalTransactions = ZERO_BI;
-    factory.totalVolumeBNB = ZERO_BD;
     factory.totalLiquidityBNB = ZERO_BD;
-    factory.totalVolumeUSD = ZERO_BD;
     factory.untrackedVolumeUSD = ZERO_BD;
     factory.totalLiquidityUSD = ZERO_BD;
 
@@ -43,8 +41,6 @@ export function handlePairCreated(event: PairCreated): void {
     token0.decimals = decimals;
     token0.derivedBNB = ZERO_BD;
     token0.derivedUSD = ZERO_BD;
-    token0.tradeVolume = ZERO_BD;
-    token0.tradeVolumeUSD = ZERO_BD;
     token0.untrackedVolumeUSD = ZERO_BD;
     token0.totalLiquidity = ZERO_BD;
     token0.totalTransactions = ZERO_BI;
@@ -63,8 +59,6 @@ export function handlePairCreated(event: PairCreated): void {
     token1.decimals = decimals;
     token1.derivedBNB = ZERO_BD;
     token1.derivedUSD = ZERO_BD;
-    token1.tradeVolume = ZERO_BD;
-    token1.tradeVolumeUSD = ZERO_BD;
     token1.untrackedVolumeUSD = ZERO_BD;
     token1.totalLiquidity = ZERO_BD;
     token1.totalTransactions = ZERO_BI;

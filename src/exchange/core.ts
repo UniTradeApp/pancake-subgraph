@@ -210,13 +210,9 @@ export function handleSwap(event: Swap): void {
   }
 
   // update token0 global volume and token liquidity stats
-  token0.tradeVolume = token0.tradeVolume.plus(amount0In.plus(amount0Out));
-  token0.tradeVolumeUSD = token0.tradeVolumeUSD.plus(trackedAmountUSD);
   token0.untrackedVolumeUSD = token0.untrackedVolumeUSD.plus(derivedAmountUSD);
 
   // update token1 global volume and token liquidity stats
-  token1.tradeVolume = token1.tradeVolume.plus(amount1In.plus(amount1Out));
-  token1.tradeVolumeUSD = token1.tradeVolumeUSD.plus(trackedAmountUSD);
   token1.untrackedVolumeUSD = token1.untrackedVolumeUSD.plus(derivedAmountUSD);
 
   // update txn counts
@@ -233,8 +229,6 @@ export function handleSwap(event: Swap): void {
 
   // update global values, only used tracked amounts for volume
   let pancake = PancakeFactory.load(FACTORY_ADDRESS);
-  pancake.totalVolumeUSD = pancake.totalVolumeUSD.plus(trackedAmountUSD);
-  pancake.totalVolumeBNB = pancake.totalVolumeBNB.plus(trackedAmountBNB);
   pancake.untrackedVolumeUSD = pancake.untrackedVolumeUSD.plus(derivedAmountUSD);
   pancake.totalTransactions = pancake.totalTransactions.plus(ONE_BI);
 

@@ -7,10 +7,6 @@ type PancakeFactory @entity {
   "Total of transactions"
   totalTransactions: BigInt!
 
-  # total volume
-  totalVolumeUSD: BigDecimal!
-  totalVolumeBNB: BigDecimal!
-
   # untracked values - less confident USD scores
   untrackedVolumeUSD: BigDecimal!
 
@@ -37,8 +33,6 @@ type Token @entity {
   decimals: BigInt!
 
   # token specific volume
-  tradeVolume: BigDecimal!
-  tradeVolumeUSD: BigDecimal!
   untrackedVolumeUSD: BigDecimal!
 
   # transactions across all pairs

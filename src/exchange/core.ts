@@ -1,11 +1,10 @@
 /* eslint-disable prefer-const */
-import { BigInt, BigDecimal, store } from "@graphprotocol/graph-ts";
+import { BigInt, BigDecimal } from "@graphprotocol/graph-ts";
 import {
   Pair,
   Token,
   PancakeFactory,
   Transaction,
-  Mint as MintEvent,
   Burn as BurnEvent,
   Swap as SwapEvent,
   Bundle,
@@ -14,10 +13,6 @@ import { Mint, Burn, Swap, Transfer, Sync } from "../../generated/templates/Pair
 import { updateTokenDayData } from "./dayUpdates";
 import { getBnbPriceInUSD, findBnbPerToken, getTrackedVolumeUSD, getTrackedLiquidityUSD } from "./pricing";
 import { convertTokenToDecimal, ADDRESS_ZERO, FACTORY_ADDRESS, ONE_BI, ZERO_BD, BI_18 } from "./utils";
-
-function isCompleteMint(mintId: string): boolean {
-  return MintEvent.load(mintId).sender !== null; // sufficient checks
-}
 
 export function handleTransfer(event: Transfer): void {
   // Initial liquidity.
@@ -37,37 +32,18 @@ export function handleTransfer(event: Transfer): void {
     transaction = new Transaction(event.transaction.hash.toHex());
     transaction.block = event.block.number;
     transaction.timestamp = event.block.timestamp;
-    transaction.mints = [];
     transaction.burns = [];
     transaction.swaps = [];
   }
 
   // mints
-  let mints = transaction.mints;
+  // let mints = transaction.mints;
   if (event.params.from.toHex() == ADDRESS_ZERO) {
     // update total supply
     pair.totalSupply = pair.totalSupply.plus(value);
     pair.save();
 
-    // create new mint if no mints so far or if last one is done already
-    if (mints.length === 0 || isCompleteMint(mints[mints.length - 1])) {
-      let mint = new MintEvent(
-        event.transaction.hash.toHex().concat("-").concat(BigInt.fromI32(mints.length).toString())
-      );
-      mint.transaction = transaction.id;
-      mint.pair = pair.id;
-      mint.to = event.params.to;
-      mint.liquidity = value;
-      mint.timestamp = transaction.timestamp;
-      mint.transaction = transaction.id;
-      mint.save();
-
-      // update mints in transaction
-      transaction.mints = mints.concat([mint.id]);
-
-      // save entities
-      transaction.save();
-    }
+    transaction.save();
   }
 
   // case where direct send first on BNB withdrawals
@@ -127,20 +103,7 @@ export function handleTransfer(event: Transfer): void {
     }
 
     // if this logical burn included a fee mint, account for this
-    if (mints.length !== 0 && !isCompleteMint(mints[mints.length - 1])) {
-      let mint = MintEvent.load(mints[mints.length - 1]);
-      burn.feeTo = mint.to;
-      burn.feeLiquidity = mint.liquidity;
-      // remove the logical mint
-      store.remove("Mint", mints[mints.length - 1]);
-      // update the transaction
-
-      // TODO: Consider using .slice().pop() to protect against unintended
-      // side effects for other code paths.
-      mints.pop();
-      transaction.mints = mints;
-      transaction.save();
-    }
+    transaction.save();
     burn.save();
     // if accessing last one, replace it
     if (burn.needsComplete) {
@@ -233,30 +196,15 @@ export function handleSync(event: Sync): void {
 }
 
 export function handleMint(event: Mint): void {
-  let transaction = Transaction.load(event.transaction.hash.toHex());
-  let mints = transaction.mints;
-  let mint = MintEvent.load(mints[mints.length - 1]);
-
   let pair = Pair.load(event.address.toHex());
   let pancake = PancakeFactory.load(FACTORY_ADDRESS);
 
   let token0 = Token.load(pair.token0);
   let token1 = Token.load(pair.token1);
 
-  // update exchange info (except balances, sync will cover that)
-  let token0Amount = convertTokenToDecimal(event.params.amount0, token0.decimals);
-  let token1Amount = convertTokenToDecimal(event.params.amount1, token1.decimals);
-
   // update txn counts
   token0.totalTransactions = token0.totalTransactions.plus(ONE_BI);
   token1.totalTransactions = token1.totalTransactions.plus(ONE_BI);
-
-  // get new amounts of USD and BNB for tracking
-  let bundle = Bundle.load("1");
-  let amountTotalUSD = token1.derivedBNB
-    .times(token1Amount)
-    .plus(token0.derivedBNB.times(token0Amount))
-    .times(bundle.bnbPrice);
 
   // update txn counts
   pair.totalTransactions = pair.totalTransactions.plus(ONE_BI);
@@ -267,13 +215,6 @@ export function handleMint(event: Mint): void {
   token1.save();
   pair.save();
   pancake.save();
-
-  mint.sender = event.params.sender;
-  mint.amount0 = token0Amount as BigDecimal;
-  mint.amount1 = token1Amount as BigDecimal;
-  mint.logIndex = event.logIndex;
-  mint.amountUSD = amountTotalUSD as BigDecimal;
-  mint.save();
 
   updateTokenDayData(token0 as Token, event);
   updateTokenDayData(token1 as Token, event);
@@ -410,7 +351,6 @@ export function handleSwap(event: Swap): void {
     transaction = new Transaction(event.transaction.hash.toHex());
     transaction.block = event.block.number;
     transaction.timestamp = event.block.timestamp;
-    transaction.mints = [];
     transaction.swaps = [];
     transaction.burns = [];
   }

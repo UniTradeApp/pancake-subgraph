@@ -52,7 +52,7 @@ type Token @entity {
   derivedUSD: BigDecimal
 
   # derived fields
-  tokenDayData: [TokenHourData!]! @derivedFrom(field: "token")
+  hourlyCandlesticks: [HourlyCandlestick!]! @derivedFrom(field: "token")
   pairBase: [Pair!]! @derivedFrom(field: "token0")
   pairQuote: [Pair!]! @derivedFrom(field: "token1")
 }
@@ -88,7 +88,6 @@ type Pair @entity {
   timestamp: BigInt!
 
   # derived fields
-  mints: [Mint!]! @derivedFrom(field: "pair")
   burns: [Burn!]! @derivedFrom(field: "pair")
   swaps: [Swap!]! @derivedFrom(field: "pair")
 }
@@ -100,33 +99,8 @@ type Transaction @entity {
   timestamp: BigInt!
   # This is not the reverse of Mint.transaction; it is only used to
   # track incomplete mints (similar for burns and swaps)
-  mints: [Mint]!
   burns: [Burn]!
   swaps: [Swap]!
-}
-
-type Mint @entity {
-  # transaction hash + "-" + index in mints Transaction array
-  id: ID!
-  transaction: Transaction!
-  timestamp: BigInt! # need this to pull recent txns for specific token or pair
-  pair: Pair!
-
-  # populated from the primary Transfer event
-  to: Bytes!
-  liquidity: BigDecimal!
-
-  # populated from the Mint event
-  sender: Bytes
-  amount0: BigDecimal
-  amount1: BigDecimal
-  logIndex: BigInt
-  # derived amount based on available prices of tokens
-  amountUSD: BigDecimal
-
-  # optional fee fields, if a Transfer event is fired in _mintFee
-  feeTo: Bytes
-  feeLiquidity: BigDecimal
 }
 
 type Burn @entity {
@@ -177,7 +151,7 @@ type Swap @entity {
   amountUSD: BigDecimal!
 }
 
-type TokenHourData @entity {
+type HourlyCandlestick @entity {
   id: ID!
 
   date: Int!

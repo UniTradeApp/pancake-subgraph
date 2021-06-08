@@ -1,8 +1,8 @@
 /* eslint-disable prefer-const */
 import { BigInt, BigDecimal, ethereum } from "@graphprotocol/graph-ts";
-import { Bundle, Token, TokenHourData } from "../../generated/schema";
+import { Bundle, Token, HourlyCandlestick } from "../../generated/schema";
 
-export function updateTokenDayData(token: Token, event: ethereum.Event): TokenHourData {
+export function updateTokenDayData(token: Token, event: ethereum.Event): HourlyCandlestick {
   let bundle = Bundle.load("1");
   let timestamp = event.block.timestamp.toI32();
   let dayID = timestamp / 3600;
@@ -10,9 +10,9 @@ export function updateTokenDayData(token: Token, event: ethereum.Event): TokenHo
   let tokenDayID = token.id.toString().concat("-").concat(BigInt.fromI32(dayID).toString());
   let priceUSD = token.derivedBNB.times(bundle.bnbPrice);
 
-  let tokenDayData = TokenHourData.load(tokenDayID);
+  let tokenDayData = HourlyCandlestick.load(tokenDayID);
   if (tokenDayData === null) {
-    tokenDayData = new TokenHourData(tokenDayID);
+    tokenDayData = new HourlyCandlestick(tokenDayID);
     tokenDayData.date = dayStartTimestamp;
     tokenDayData.token = token.id;
     tokenDayData.openPriceUSD = priceUSD;
@@ -36,5 +36,5 @@ export function updateTokenDayData(token: Token, event: ethereum.Event): TokenHo
 
   tokenDayData.save();
 
-  return tokenDayData as TokenHourData;
+  return tokenDayData as HourlyCandlestick;
 }

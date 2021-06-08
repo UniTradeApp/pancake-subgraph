@@ -95,17 +95,29 @@ export function updateTokenDayData(token: Token, event: ethereum.Event): TokenDa
     tokenDayData.date = dayStartTimestamp;
     tokenDayData.token = token.id;
     tokenDayData.priceUSD = token.derivedBNB.times(bundle.bnbPrice);
-    tokenDayData.dailyVolumeToken = ZERO_BD;
-    tokenDayData.dailyVolumeBNB = ZERO_BD;
-    tokenDayData.dailyVolumeUSD = ZERO_BD;
-    tokenDayData.dailyTxns = ZERO_BI;
-    tokenDayData.totalLiquidityUSD = ZERO_BD;
+    tokenDayData.openPriceUSD = tokenDayData.priceUSD;
+    tokenDayData.closePriceUSD = tokenDayData.priceUSD;
+    tokenDayData.minPriceUSD = tokenDayData.priceUSD;
+    tokenDayData.maxPriceUSD = tokenDayData.priceUSD;
   }
+  tokenDayData.closePriceUSD = tokenDayData.priceUSD;
   tokenDayData.priceUSD = token.derivedBNB.times(bundle.bnbPrice);
-  tokenDayData.totalLiquidityToken = token.totalLiquidity;
-  tokenDayData.totalLiquidityBNB = token.totalLiquidity.times(token.derivedBNB as BigDecimal);
-  tokenDayData.totalLiquidityUSD = tokenDayData.totalLiquidityBNB.times(bundle.bnbPrice);
-  tokenDayData.dailyTxns = tokenDayData.dailyTxns.plus(ONE_BI);
+
+  if (tokenDayData.openPriceUSD.equals(BigDecimal.fromString("0"))) {
+    tokenDayData.openPriceUSD = tokenDayData.priceUSD;
+  }
+
+  if (
+    tokenDayData.minPriceUSD.equals(BigDecimal.fromString("0")) ||
+    tokenDayData.priceUSD.lt(tokenDayData.minPriceUSD)
+  ) {
+    tokenDayData.minPriceUSD = tokenDayData.priceUSD;
+  }
+
+  if (tokenDayData.priceUSD.gt(tokenDayData.maxPriceUSD)) {
+    tokenDayData.maxPriceUSD = tokenDayData.priceUSD;
+  }
+
   tokenDayData.save();
 
   return tokenDayData as TokenDayData;

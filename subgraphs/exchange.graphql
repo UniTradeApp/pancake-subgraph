@@ -251,17 +251,10 @@ type TokenDayData @entity {
   date: Int!
   token: Token!
 
-  # volume stats
-  dailyVolumeToken: BigDecimal!
-  dailyVolumeBNB: BigDecimal!
-  dailyVolumeUSD: BigDecimal!
-  dailyTxns: BigInt!
-
-  # liquidity stats
-  totalLiquidityToken: BigDecimal!
-  totalLiquidityBNB: BigDecimal!
-  totalLiquidityUSD: BigDecimal!
-
   # price stats
   priceUSD: BigDecimal!
+  openPriceUSD: BigDecimal!
+  closePriceUSD: BigDecimal!
+  minPriceUSD: BigDecimal!
+  maxPriceUSD: BigDecimal!
 }

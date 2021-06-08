@@ -4,12 +4,6 @@ type PancakeFactory @entity {
   "Total of pairs"
   totalPairs: BigInt!
 
-  "Total of transactions"
-  totalTransactions: BigInt!
-
-  # untracked values - less confident USD scores
-  untrackedVolumeUSD: BigDecimal!
-
   # total liquidity
   totalLiquidityUSD: BigDecimal!
   totalLiquidityBNB: BigDecimal!
@@ -31,12 +25,6 @@ type Token @entity {
   symbol: String!
   "Decimals"
   decimals: BigInt!
-
-  # token specific volume
-  untrackedVolumeUSD: BigDecimal!
-
-  # transactions across all pairs
-  totalTransactions: BigInt!
 
   # liquidity across all pairs
   totalLiquidity: BigDecimal!
@@ -70,13 +58,6 @@ type Pair @entity {
   # Price in terms of the asset pair
   token0Price: BigDecimal!
   token1Price: BigDecimal!
-
-  # lifetime volume stats
-  volumeToken0: BigDecimal!
-  volumeToken1: BigDecimal!
-  volumeUSD: BigDecimal!
-  untrackedVolumeUSD: BigDecimal!
-  totalTransactions: BigInt!
 
   block: BigInt!
   timestamp: BigInt!

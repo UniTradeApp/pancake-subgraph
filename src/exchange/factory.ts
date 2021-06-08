@@ -17,9 +17,7 @@ export function handlePairCreated(event: PairCreated): void {
   if (factory === null) {
     factory = new PancakeFactory(FACTORY_ADDRESS);
     factory.totalPairs = ZERO_BI;
-    factory.totalTransactions = ZERO_BI;
     factory.totalLiquidityBNB = ZERO_BD;
-    factory.untrackedVolumeUSD = ZERO_BD;
     factory.totalLiquidityUSD = ZERO_BD;
 
     let bundle = new Bundle("1");
@@ -41,9 +39,7 @@ export function handlePairCreated(event: PairCreated): void {
     token0.decimals = decimals;
     token0.derivedBNB = ZERO_BD;
     token0.derivedUSD = ZERO_BD;
-    token0.untrackedVolumeUSD = ZERO_BD;
     token0.totalLiquidity = ZERO_BD;
-    token0.totalTransactions = ZERO_BI;
     token0.save();
   }
 
@@ -59,9 +55,7 @@ export function handlePairCreated(event: PairCreated): void {
     token1.decimals = decimals;
     token1.derivedBNB = ZERO_BD;
     token1.derivedUSD = ZERO_BD;
-    token1.untrackedVolumeUSD = ZERO_BD;
     token1.totalLiquidity = ZERO_BD;
-    token1.totalTransactions = ZERO_BI;
     token1.save();
   }
 
@@ -69,17 +63,12 @@ export function handlePairCreated(event: PairCreated): void {
   pair.token0 = token0.id;
   pair.token1 = token1.id;
   pair.name = token0.symbol.concat("-").concat(token1.symbol);
-  pair.totalTransactions = ZERO_BI;
   pair.reserve0 = ZERO_BD;
   pair.reserve1 = ZERO_BD;
   pair.trackedReserveBNB = ZERO_BD;
   pair.reserveBNB = ZERO_BD;
   pair.reserveUSD = ZERO_BD;
   pair.totalSupply = ZERO_BD;
-  pair.volumeToken0 = ZERO_BD;
-  pair.volumeToken1 = ZERO_BD;
-  pair.volumeUSD = ZERO_BD;
-  pair.untrackedVolumeUSD = ZERO_BD;
   pair.token0Price = ZERO_BD;
   pair.token1Price = ZERO_BD;
   pair.block = event.block.number;

@@ -4,7 +4,7 @@ import { Pair, Token, PancakeFactory, Transaction, Swap as SwapEvent, Bundle } f
 import { Mint, Burn, Swap, Transfer, Sync } from "../../generated/templates/Pair/Pair";
 import { updateTokenDayData } from "./dayUpdates";
 import { getBnbPriceInUSD, findBnbPerToken, getTrackedVolumeUSD, getTrackedLiquidityUSD } from "./pricing";
-import { convertTokenToDecimal, ADDRESS_ZERO, FACTORY_ADDRESS, ONE_BI, ZERO_BD, BI_18 } from "./utils";
+import { convertTokenToDecimal, ADDRESS_ZERO, FACTORY_ADDRESS, ZERO_BD, BI_18 } from "./utils";
 
 export function handleTransfer(event: Transfer): void {
   // Initial liquidity.
@@ -122,14 +122,6 @@ export function handleMint(event: Mint): void {
   let token0 = Token.load(pair.token0);
   let token1 = Token.load(pair.token1);
 
-  // update txn counts
-  token0.totalTransactions = token0.totalTransactions.plus(ONE_BI);
-  token1.totalTransactions = token1.totalTransactions.plus(ONE_BI);
-
-  // update txn counts
-  pair.totalTransactions = pair.totalTransactions.plus(ONE_BI);
-  pancake.totalTransactions = pancake.totalTransactions.plus(ONE_BI);
-
   // save entities
   token0.save();
   token1.save();
@@ -152,13 +144,6 @@ export function handleBurn(event: Burn): void {
   //update token info
   let token0 = Token.load(pair.token0);
   let token1 = Token.load(pair.token1);
-
-  // update txn counts
-  token0.totalTransactions = token0.totalTransactions.plus(ONE_BI);
-  token1.totalTransactions = token1.totalTransactions.plus(ONE_BI);
-  // update txn counts
-  pancake.totalTransactions = pancake.totalTransactions.plus(ONE_BI);
-  pair.totalTransactions = pair.totalTransactions.plus(ONE_BI);
 
   // update global counter and save
   token0.save();
@@ -209,28 +194,11 @@ export function handleSwap(event: Swap): void {
     trackedAmountBNB = trackedAmountUSD.div(bundle.bnbPrice);
   }
 
-  // update token0 global volume and token liquidity stats
-  token0.untrackedVolumeUSD = token0.untrackedVolumeUSD.plus(derivedAmountUSD);
-
-  // update token1 global volume and token liquidity stats
-  token1.untrackedVolumeUSD = token1.untrackedVolumeUSD.plus(derivedAmountUSD);
-
-  // update txn counts
-  token0.totalTransactions = token0.totalTransactions.plus(ONE_BI);
-  token1.totalTransactions = token1.totalTransactions.plus(ONE_BI);
-
   // update pair volume data, use tracked amount if we have it as its probably more accurate
-  pair.volumeUSD = pair.volumeUSD.plus(trackedAmountUSD);
-  pair.volumeToken0 = pair.volumeToken0.plus(amount0Total);
-  pair.volumeToken1 = pair.volumeToken1.plus(amount1Total);
-  pair.untrackedVolumeUSD = pair.untrackedVolumeUSD.plus(derivedAmountUSD);
-  pair.totalTransactions = pair.totalTransactions.plus(ONE_BI);
   pair.save();
 
   // update global values, only used tracked amounts for volume
   let pancake = PancakeFactory.load(FACTORY_ADDRESS);
-  pancake.untrackedVolumeUSD = pancake.untrackedVolumeUSD.plus(derivedAmountUSD);
-  pancake.totalTransactions = pancake.totalTransactions.plus(ONE_BI);
 
   // save entities
   pair.save();

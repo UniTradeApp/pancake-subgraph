@@ -1,6 +1,6 @@
 /* eslint-disable prefer-const */
 import { BigInt, BigDecimal } from "@graphprotocol/graph-ts";
-import { Pair, Token, PancakeFactory, Transaction, Swap as SwapEvent, Bundle } from "../../generated/schema";
+import { Pair, Token, PancakeFactory, Swap as SwapEvent, Bundle } from "../../generated/schema";
 import { Mint, Burn, Swap, Transfer, Sync } from "../../generated/templates/Pair/Pair";
 import { updateTokenDayData } from "./dayUpdates";
 import { getBnbPriceInUSD, findBnbPerToken, getTrackedVolumeUSD, getTrackedLiquidityUSD } from "./pricing";
@@ -18,15 +18,6 @@ export function handleTransfer(event: Transfer): void {
   // liquidity token amount being transferred
   let value = convertTokenToDecimal(event.params.value, BI_18);
 
-  // get or create transaction
-  let transaction = Transaction.load(event.transaction.hash.toHex());
-  if (transaction === null) {
-    transaction = new Transaction(event.transaction.hash.toHex());
-    transaction.block = event.block.number;
-    transaction.timestamp = event.block.timestamp;
-    transaction.swaps = [];
-  }
-
   // mints
   // let mints = transaction.mints;
   if (event.params.from.toHex() == ADDRESS_ZERO) {
@@ -40,8 +31,6 @@ export function handleTransfer(event: Transfer): void {
     pair.totalSupply = pair.totalSupply.minus(value);
     pair.save();
   }
-
-  transaction.save();
 }
 
 export function handleSync(event: Sync): void {
@@ -133,11 +122,6 @@ export function handleMint(event: Mint): void {
 }
 
 export function handleBurn(event: Burn): void {
-  let transaction = Transaction.load(event.transaction.hash.toHex());
-  if (transaction === null) {
-    return;
-  }
-
   let pair = Pair.load(event.address.toHex());
   let pancake = PancakeFactory.load(FACTORY_ADDRESS);
 
@@ -206,21 +190,11 @@ export function handleSwap(event: Swap): void {
   token1.save();
   pancake.save();
 
-  let transaction = Transaction.load(event.transaction.hash.toHex());
-  if (transaction === null) {
-    transaction = new Transaction(event.transaction.hash.toHex());
-    transaction.block = event.block.number;
-    transaction.timestamp = event.block.timestamp;
-    transaction.swaps = [];
-  }
-  let swaps = transaction.swaps;
-  let swap = new SwapEvent(event.transaction.hash.toHex().concat("-").concat(BigInt.fromI32(swaps.length).toString()));
+  let swap = new SwapEvent(event.transaction.hash.toHex().concat("-").concat(BigInt.fromI32(0).toString()));
 
   // update swap event
-  swap.transaction = transaction.id;
   swap.pair = pair.id;
-  swap.timestamp = transaction.timestamp;
-  swap.transaction = transaction.id;
+  swap.timestamp = event.block.timestamp;
   swap.sender = event.params.sender;
   swap.amount0In = amount0In;
   swap.amount1In = amount1In;
@@ -232,12 +206,4 @@ export function handleSwap(event: Swap): void {
   // use the tracked amount if we have it
   swap.amountUSD = trackedAmountUSD === ZERO_BD ? derivedAmountUSD : trackedAmountUSD;
   swap.save();
-
-  // update the transaction
-
-  // TODO: Consider using .concat() for handling array updates to protect
-  // against unintended side effects for other code paths.
-  swaps.push(swap.id);
-  transaction.swaps = swaps;
-  transaction.save();
 }

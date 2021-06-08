@@ -11,7 +11,7 @@ import {
   Bundle,
 } from "../../generated/schema";
 import { Mint, Burn, Swap, Transfer, Sync } from "../../generated/templates/Pair/Pair";
-import { updatePairDayData, updateTokenDayData, updatePancakeDayData, updatePairHourData } from "./dayUpdates";
+import { updateTokenDayData } from "./dayUpdates";
 import { getBnbPriceInUSD, findBnbPerToken, getTrackedVolumeUSD, getTrackedLiquidityUSD } from "./pricing";
 import { convertTokenToDecimal, ADDRESS_ZERO, FACTORY_ADDRESS, ONE_BI, ZERO_BD, BI_18 } from "./utils";
 

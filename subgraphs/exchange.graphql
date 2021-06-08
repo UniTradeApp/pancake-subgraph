@@ -184,9 +184,8 @@ type TokenHourData @entity {
   token: Token!
 
   # price stats
-  priceUSD: BigDecimal!
   openPriceUSD: BigDecimal!
   closePriceUSD: BigDecimal!
-  minPriceUSD: BigDecimal!
-  maxPriceUSD: BigDecimal!
+  lowPriceUSD: BigDecimal!
+  highPriceUSD: BigDecimal!
 }

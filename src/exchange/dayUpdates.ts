@@ -8,34 +8,30 @@ export function updateTokenDayData(token: Token, event: ethereum.Event): TokenHo
   let dayID = timestamp / 3600;
   let dayStartTimestamp = dayID * 3600;
   let tokenDayID = token.id.toString().concat("-").concat(BigInt.fromI32(dayID).toString());
+  let priceUSD = token.derivedBNB.times(bundle.bnbPrice);
 
   let tokenDayData = TokenHourData.load(tokenDayID);
   if (tokenDayData === null) {
     tokenDayData = new TokenHourData(tokenDayID);
     tokenDayData.date = dayStartTimestamp;
     tokenDayData.token = token.id;
-    tokenDayData.priceUSD = token.derivedBNB.times(bundle.bnbPrice);
-    tokenDayData.openPriceUSD = tokenDayData.priceUSD;
-    tokenDayData.closePriceUSD = tokenDayData.priceUSD;
-    tokenDayData.minPriceUSD = tokenDayData.priceUSD;
-    tokenDayData.maxPriceUSD = tokenDayData.priceUSD;
+    tokenDayData.openPriceUSD = priceUSD;
+    tokenDayData.closePriceUSD = priceUSD;
+    tokenDayData.lowPriceUSD = priceUSD;
+    tokenDayData.highPriceUSD = priceUSD;
   }
-  tokenDayData.closePriceUSD = tokenDayData.priceUSD;
-  tokenDayData.priceUSD = token.derivedBNB.times(bundle.bnbPrice);
+  tokenDayData.closePriceUSD = priceUSD;
 
   if (tokenDayData.openPriceUSD.equals(BigDecimal.fromString("0"))) {
-    tokenDayData.openPriceUSD = tokenDayData.priceUSD;
+    tokenDayData.openPriceUSD = priceUSD;
   }
 
-  if (
-    tokenDayData.minPriceUSD.equals(BigDecimal.fromString("0")) ||
-    tokenDayData.priceUSD.lt(tokenDayData.minPriceUSD)
-  ) {
-    tokenDayData.minPriceUSD = tokenDayData.priceUSD;
+  if (tokenDayData.lowPriceUSD.equals(BigDecimal.fromString("0")) || priceUSD.lt(tokenDayData.lowPriceUSD)) {
+    tokenDayData.lowPriceUSD = priceUSD;
   }
 
-  if (tokenDayData.priceUSD.gt(tokenDayData.maxPriceUSD)) {
-    tokenDayData.maxPriceUSD = tokenDayData.priceUSD;
+  if (priceUSD.gt(tokenDayData.highPriceUSD)) {
+    tokenDayData.highPriceUSD = priceUSD;
   }
 
   tokenDayData.save();
